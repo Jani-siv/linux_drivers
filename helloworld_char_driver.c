@@ -7,9 +7,12 @@
 //define major number
 //
 #define MY_MAJOR_NUM	202
-
+//creating cdev structure
 static struct cdev my_dev;
-
+//https://tldp.org/LDP/lkmpg/2.4/html/c577.htm
+//callback functions that are defined in the struct file_operations structure:
+//you see (struct inode *inode, struct file *file) from
+//int (*open) (struct inode *, struct file *);
 static int my_dev_open(struct inode *inode, struct file *file)
 {
 	pr_info("my_dev_open() is called.\n");
@@ -38,10 +41,15 @@ static const struct file_operations my_dev_fops = {
 static int __init hello_init(void)
 {
 	int ret;
+	//MKDEV — Creates a value that can be compared to a kernel device number
+	//dev_t MKDEV(long major, long minor)
 	dev_t dev = MKDEV(MY_MAJOR_NUM, 0);
+	
 	pr_info("hello world init\n");
 
 	//allocate device numbers
+	//int register_chrdev_region (	dev_t from,unsigned count,const char * name);
+	//range of devices what needed in this practice we need one
 	ret = register_chrdev_region(dev, 1,"my_char_device");
 	if (ret < 0) {
 		pr_info("unable to allocate mayor number %d\n", MY_MAJOR_NUM);
@@ -49,7 +57,12 @@ static int __init hello_init(void)
 	}
 
 	//init the cdev structure and add it to the kernel space
+	//void cdev_init (	struct cdev * cdev,const struct file_operations * fops);
+	//fops is file_operations structure
 	cdev_init(&my_dev, &my_dev_fops);
+	//cdev_add — add a char device to the system
+	//int cdev_add (	struct cdev * p,dev_t dev,unsigned count);
+
 	ret = cdev_add(&my_dev,dev,1);
 	if (ret < 0) {
 		unregister_chrdev_region(dev,1);
