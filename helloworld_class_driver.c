@@ -7,11 +7,12 @@
 //define names
 #define DEVICE_NAME "mydev"
 #define CLASS_NAME "hello_class"
-
+//making pointer to struct class
+//https://linuxtv.org/downloads/v4l-dvb-internals/device-drivers/API-struct-class.html
 static struct class* helloClass;
 //creating cdev structure
 static struct cdev my_dev;
-
+//init dev_t type variable dev
 dev_t dev;
 //https://tldp.org/LDP/lkmpg/2.4/html/c577.htm
 //callback functions that are defined in the struct file_operations structure:
@@ -72,7 +73,9 @@ static int __init hello_init(void)
 	}
 
 	//register the device class
+	//THIS_MODULE hold owner of information and none can disable driver, class name
 	helloClass = class_create(THIS_MODULE,CLASS_NAME);
+	//error handling
 	if (IS_ERR(helloClass)){
 		cdev_del(&my_dev);
 		unregister_chrdev_region(dev,1);
@@ -80,7 +83,7 @@ static int __init hello_init(void)
 		return PTR_ERR(helloClass);
 	}
 	pr_info("the class is created correctly");
-
+//device_create() This function can be used by char device classes. A struct device will be created in sysfs, registered to the specified class.
 	helloDevice = device_create(helloClass,NULL, dev, NULL,DEVICE_NAME);
 	if (IS_ERR(helloDevice)) {
 		class_destroy(helloClass);
